@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Gate Delay Bingo</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --amber: #f5a623;
+    --amber-dim: #c07d10;
+    --amber-bright: #ffd27a;
+    --bg: #0d0f14;
+    --surface: #131620;
+    --card: #0f1118;
+    --border: rgba(245,166,35,0.2);
+    --text: #e8d5a3;
+    --muted: #6b5f3e;
+    --marked-bg: rgba(245,166,35,0.13);
+    --red: #e05252;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘DM Sans’, sans-serif;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 14px 10px 32px;
+background-image:
+repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(245,166,35,0.02) 40px, rgba(245,166,35,0.02) 41px),
+radial-gradient(ellipse at 50% 0%, rgba(245,166,35,0.07) 0%, transparent 60%);
+}
+
+/* Departures board header */
+header {
+width: 100%;
+max-width: 520px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 12px 14px;
+margin-bottom: 14px;
+position: relative;
+overflow: hidden;
+}
+
+header::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+background: linear-gradient(90deg, transparent, var(–amber), transparent);
+}
+
+.board-row {
+display: grid;
+grid-template-columns: 1fr auto;
+align-items: center;
+gap: 8px;
+margin-bottom: 4px;
+}
+
+.flight-label {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 9px;
+letter-spacing: 0.15em;
+color: var(–muted);
+text-transform: uppercase;
+margin-bottom: 2px;
+}
+
+.flight-info {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: clamp(11px, 3vw, 14px);
+color: var(–amber);
+letter-spacing: 0.08em;
+}
+
+.status-badge {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 10px;
+letter-spacing: 0.1em;
+background: rgba(224,82,82,0.15);
+color: var(–red);
+border: 1px solid rgba(224,82,82,0.3);
+border-radius: 3px;
+padding: 3px 8px;
+animation: blink 2s step-end infinite;
+white-space: nowrap;
+}
+
+@keyframes blink {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.4; }
+}
+
+h1 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(28px, 8vw, 42px);
+color: var(–amber-bright);
+letter-spacing: 0.12em;
+line-height: 1;
+margin-top: 2px;
+}
+
+.subtitle {
+font-size: clamp(11px, 3vw, 13px);
+color: var(–muted);
+font-style: italic;
+margin-top: 3px;
+letter-spacing: 0.02em;
+}
+
+/* BINGO letters */
+.bingo-header {
+display: grid;
+grid-template-columns: repeat(5, 1fr);
+gap: 3px;
+width: 100%;
+max-width: 520px;
+margin-bottom: 3px;
+}
+
+.bingo-letter {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(18px, 5vw, 26px);
+color: var(–amber);
+text-align: center;
+letter-spacing: 0.1em;
+padding: 2px 0;
+opacity: 0.9;
+}
+
+/* Grid */
+.grid {
+display: grid;
+grid-template-columns: repeat(5, 1fr);
+gap: 3px;
+width: 100%;
+max-width: 520px;
+}
+
+.cell {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 3px;
+aspect-ratio: 1 / 1;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 4px;
+cursor: pointer;
+position: relative;
+overflow: hidden;
+transition: border-color 0.15s, background 0.15s, transform 0.1s;
+-webkit-tap-highlight-color: transparent;
+user-select: none;
+}
+
+.cell:active { transform: scale(0.93); }
+
+.cell-text {
+font-family: ‘DM Sans’, sans-serif;
+font-size: clamp(7px, 1.85vw, 10.5px);
+line-height: 1.2;
+text-align: center;
+color: #c4af82;
+z-index: 1;
+position: relative;
+}
+
+.cell.free {
+background: rgba(245,166,35,0.07);
+border-color: rgba(245,166,35,0.35);
+cursor: default;
+}
+
+.cell.free .cell-text {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: clamp(7px, 1.8vw, 10px);
+color: var(–amber);
+letter-spacing: 0.04em;
+}
+
+.cell.marked {
+background: var(–marked-bg);
+border-color: var(–amber-dim);
+}
+
+.cell.marked .cell-text { color: var(–amber-bright); }
+
+.cell.marked::before {
+content: ‘✓’;
+position: absolute;
+top: 2px;
+right: 3px;
+font-size: 8px;
+color: var(–amber);
+opacity: 0.9;
+z-index: 2;
+font-family: monospace;
+}
+
+.cell.marked::after {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: radial-gradient(circle at center, rgba(245,166,35,0.1) 0%, transparent 70%);
+}
+
+.cell.bingo-winner {
+background: rgba(245,166,35,0.2);
+border-color: var(–amber);
+animation: glow 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+from { box-shadow: 0 0 4px rgba(245,166,35,0.3); }
+to { box-shadow: 0 0 12px rgba(245,166,35,0.7); }
+}
+
+/* Bingo banner */
+.bingo-banner {
+display: none;
+width: 100%;
+max-width: 520px;
+margin-top: 12px;
+text-align: center;
+padding: 12px 16px;
+background: var(–surface);
+border: 1px solid var(–amber);
+border-radius: 5px;
+}
+
+.bingo-banner.show { display: block; animation: pop 0.3s ease; }
+
+@keyframes pop {
+0% { transform: scale(0.95); opacity: 0; }
+100% { transform: scale(1); opacity: 1; }
+}
+
+.bingo-banner h2 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(22px, 7vw, 32px);
+color: var(–amber-bright);
+letter-spacing: 0.15em;
+}
+
+.bingo-banner p {
+font-style: italic;
+font-size: 12px;
+color: var(–muted);
+margin-top: 3px;
+}
+
+footer {
+margin-top: 16px;
+text-align: center;
+max-width: 520px;
+width: 100%;
+}
+
+.reset-btn {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 10px;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+color: var(–muted);
+background: none;
+border: 1px solid rgba(245,166,35,0.2);
+border-radius: 3px;
+padding: 8px 20px;
+cursor: pointer;
+transition: color 0.2s, border-color 0.2s;
+-webkit-tap-highlight-color: transparent;
+}
+
+.reset-btn:hover, .reset-btn:active {
+color: var(–amber);
+border-color: rgba(245,166,35,0.5);
+}
+
+.footer-note {
+font-style: italic;
+font-size: 11px;
+color: rgba(107,95,62,0.6);
+margin-top: 10px;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="board-row">
+    <div>
+      <div class="flight-label">Flight</div>
+      <div class="flight-info">DTW → CHA &nbsp;|&nbsp; GATE B1</div>
+    </div>
+    <div class="status-badge">DELAYED</div>
+  </div>
+  <div class="board-row">
+    <div>
+      <h1>GATE DELAY BINGO</h1>
+      <div class="subtitle">A game for Janna, who just needs to get to Chattanooga</div>
+    </div>
+  </div>
+</header>
+
+<div class="bingo-header">
+  <div class="bingo-letter">B</div>
+  <div class="bingo-letter">I</div>
+  <div class="bingo-letter">N</div>
+  <div class="bingo-letter">G</div>
+  <div class="bingo-letter">O</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="bingo-banner" id="banner">
+  <h2>✈ BINGO!</h2>
+  <p>Your flight is still delayed. But at least you won something.</p>
+</div>
+
+<footer>
+  <button class="reset-btn" onclick="resetCard()">New Card</button>
+  <p class="footer-note">Tap to mark. You've got time. Plenty of time.</p>
+</footer>
+
+<script>
+const ALL_SQUARES = [
+  `Gate changed to the farthest possible gate`,
+  `PA announcement completely unintelligible`,
+  `We're just waiting on the crew`,
+  `Another 30-minute delay added`,
+  `Person on phone at full volume`,
+  `Every outlet taken, one is broken`,
+  `Phone hits 12% battery`,
+  `Couple arguing loudly`,
+  `Someone reclines in a gate chair somehow`,
+  `Child running laps around the gate area`,
+  `Overpriced airport food purchased in desperation`,
+  `WiFi that technically works but doesn't`,
+  `Do you know if this flight is full?`,
+  `Spotted: Crocs. At a gate. In public.`,
+  `FaceTime. No headphones. Speaker at max.`,
+  `Rolling bag directly hits your ankle`,
+  `I have a very important meeting`,
+  `Gate agent says "shortly" for the 4th time`,
+  `Flight attendant spotted — everyone perks up`,
+  `Someone eating something that smells like a crime`,
+  `People spaced out at gate making seating awkward`,
+  `Delay caused by weather. It is sunny here.`,
+  `Person asks to trade for a middle seat`,
+  `Overhead bin space debate happening already`,
+  `Someone falls asleep and starts snoring — loudly`,
+  `Gate change back to the original gate`,
+  `Someone asks "are we boarding yet?" every 5 minutes`,
+  `Someone's carry-on wheels fall off`,
+  `Someone complains directly to the gate agent`,
+  `New departure time posted. Then removed.`,
+  `Overhead announcement made in Japanese`,
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let squares = [];
+let marked = new Array(25).fill(false);
+
+function buildCard() {
+  const pool = shuffle(ALL_SQUARES).slice(0, 24);
+  pool.splice(12, 0, 'FREE SPACE\nStill not boarding');
+  squares = pool;
+  marked = new Array(25).fill(false);
+  marked[12] = true;
+  renderGrid();
+  document.getElementById('banner').classList.remove('show');
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  squares.forEach((text, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (i === 12 ? ' free' : '') + (marked[i] ? ' marked' : '');
+    cell.innerHTML = `<span class="cell-text">${text}</span>`;
+    if (i !== 12) cell.addEventListener('click', () => toggle(i));
+    grid.appendChild(cell);
+  });
+}
+
+function toggle(i) {
+  marked[i] = !marked[i];
+  renderGrid();
+  checkBingo();
+}
+
+function checkBingo() {
+  const lines = [
+    [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
+    [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
+    [0,6,12,18,24],[4,8,12,16,20]
+  ];
+  let winningCells = new Set();
+  let hasBingo = false;
+  lines.forEach(line => {
+    if (line.every(i => marked[i])) {
+      hasBingo = true;
+      line.forEach(i => winningCells.add(i));
+    }
+  });
+  document.querySelectorAll('.cell').forEach((cell, i) => {
+    cell.classList.toggle('bingo-winner', winningCells.has(i));
+  });
+  document.getElementById('banner').classList.toggle('show', hasBingo);
+}
+
+function resetCard() { buildCard(); }
+
+buildCard();
+</script>
+
+</body>
+</html>
